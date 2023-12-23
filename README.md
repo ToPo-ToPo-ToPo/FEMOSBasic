@@ -1,4 +1,4 @@
-# JuliaFEMPure
+# JuFEMPure
 Juliaにて書かれた教育用の有限要素法プログラムです．  
 
 ## 概要
