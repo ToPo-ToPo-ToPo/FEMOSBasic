@@ -117,7 +117,7 @@ end
 #----------------------------------------------------------------
 function jacobian_matrix(nodes, element, xi, eta)
     num_nodes = length(element.nodes)
-    dN_dxi = shape_function_derivatives(xi, eta)
+    dN_dxi, dN_deta = shape_function_derivatives(xi, eta)
 
     J = zeros(2, 2)
 
