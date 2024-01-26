@@ -1,5 +1,4 @@
 
-using SparseArrays
 include("model.jl")
 #----------------------------------------------------------------
 # メイン関数
@@ -93,11 +92,16 @@ function main()
     thermal_diff_2d_model::Model = Model(nodes, elements)
 
     # FEM解析の実行
-    U = solve(thermal_diff_2d_model, dirichlet_bcs, neumman_bcs, sources)
+    T = solve(thermal_diff_2d_model, dirichlet_bcs, neumman_bcs, sources)
 
-    # 結果の整理
+    # 結果をノードに反映
+    for node in thermal_diff_2d_model.nodes
+        node.field = T[node.id]
+    end
 
     # 結果のポスト
+    println(T)
+    
 end
 #----------------------------------------------------------------
 # main関数の呼び出し

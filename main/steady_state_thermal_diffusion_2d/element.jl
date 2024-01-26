@@ -1,5 +1,6 @@
 
 include("node.jl")
+using LinearAlgebra
 #----------------------------------------------------------------
 # 材料モデル
 #----------------------------------------------------------------
@@ -62,12 +63,12 @@ function shape_functions(coordinate::Vector{Float64})
 
     xi::Float64, et::Float64 = coordinate
 
-    N = [
-        0.25 * (1.0 - xi) * (1.0 - et),
-        0.25 * (1.0 + xi) * (1.0 - et),
-        0.25 * (1.0 + xi) * (1.0 + et),
-        0.25 * (1.0 - xi) * (1.0 + et)
-    ]
+    N1 = 0.25 * (1.0 - xi) * (1.0 - et)
+    N2 = 0.25 * (1.0 + xi) * (1.0 - et)
+    N3 = 0.25 * (1.0 + xi) * (1.0 + et)
+    N4 = 0.25 * (1.0 - xi) * (1.0 + et)
+
+    N = [N1 N2 N3 N4]
 
     return N
 end
@@ -76,17 +77,20 @@ end
 #----------------------------------------------------------------
 function jacobian_matrix(nodes::Vector{Node}, coordinate::Vector{Float64})
     
-    num_nodes::Int64 = length(nodes)
+    # 要素節点数の取得
+    num_node = length(nodes)
 
-    # 形状関数の微分
-    dN = shape_function_derivatives(coordinate)
+    # 形状関数の微分を計算
+    dNdxi = shape_function_derivatives(coordinate)
 
-    # 初期化
-    J = zeros(2, 2)
+    # 座標をまとめたマトリクスを作成
+    coord_matrix = Matrix{Float64}(undef, num_node, 2)
+    for i = 1 : num_node
+        coord_matrix[i, :] = [nodes[i].coordinate[1] nodes[i].coordinate[2]]
+    end
 
-    #for i in 1:num_nodes
-    #    J += [nodes[element.nodes[i]].x, nodes[element.nodes[i]].y] * dN[i, :]
-    #end
+    # ヤコビ行列を計算する
+    J = dNdxi * coord_matrix
 
     return J
 end
@@ -96,28 +100,40 @@ end
 function shape_function_derivatives(coordinate::Vector{Float64})
     
     # 積分点座標の設定
-    xi::Float64, et::Float64 = coordinate
+    xi, et = coordinate
 
-    dN_dxi = [
-        -0.25 * (1.0 - et) 
-         0.25 * (1.0 - et) 
-         0.25 * (1.0 + et) 
-        -0.25 * (1.0 + et)
-    ]
+    # 形状関数の微分を計算
+    dNdxi = Matrix{Float64}(undef, 2, 4)
 
-    dN_det = [
-        -0.25 * (1.0 - xi) 
-        -0.25 * (1.0 + xi) 
-         0.25 * (1.0 + xi) 
-         0.25 * (1.0 - xi)
-    ]
+    dNdxi[1, :] = [-0.25 * (1.0 - et) 0.25 * (1.0 - et) 0.25 * (1.0 + et) -0.25 * (1.0 + et)]
+    dNdxi[2, :] = [-0.25 * (1.0 - xi) -0.25 * (1.0 + xi) 0.25 * (1.0 + xi) 0.25 * (1.0 - xi)]
 
-    return [dN_dxi, dN_det]
+    return dNdxi
+end
+#----------------------------------------------------------------
+# Bマトリクスの作成
+#----------------------------------------------------------------
+function make_B(nodes, coordinate)
+
+    # 形状関数の微分を計算
+    dNdxi = shape_function_derivatives(coordinate)
+
+    # ヤコビ行列の計算
+    J = jacobian_matrix(nodes, coordinate)
+
+    # dNdxの計算: dNdxi = J * dNdx -> dNdx = J_invers * dNdxi
+    dNdx = J \ dNdxi
+
+    # Bマトリクスの整形
+    B = dNdx
+
+    return B
+
 end
 #----------------------------------------------------------------
 # 要素マトリクスの作成
 #----------------------------------------------------------------
-function compute_Ke(element)
+function make_Ke(element)
     
     # 要素自由度
     num_dof = length(element.nodes)
@@ -128,34 +144,29 @@ function compute_Ke(element)
     # 積分点ループ
     for evaluate_point in element.evaluate_points
 
-        # 形状関数の計算
-        N = shape_functions(evaluate_point.coordinate)
-
         # ヤコビ行列の計算
         J = jacobian_matrix(element.nodes, evaluate_point.coordinate)
 
-        # ガウス積分の重みとヤコビアンのスケーリング
-        #weight = evaluate_point.weight * det(J)
+        # Bマトリクスの計算
+        B = make_B(element.nodes, evaluate_point.coordinate)
 
         # ローカル剛性行列の計算
-        #local_K += conductivity * (inv(J)' * inv(J)) * N * N' * weight
+        Ke += evaluate_point.material.conductivity * B' * B * evaluate_point.weight * det(J)
 
-        # ローカル右辺ベクトルの計算（内部発熱項も含む）
-        #local_F += N * element.heat_source * weight
     end
 
     return Ke
 end
 #----------------------------------------------------------------
-# 要素マトリクスの作成
+# 要素のソース項の作成
 #----------------------------------------------------------------
-function compute_Fbe(element)
+function make_Fbe(element, value)
     
     # 要素自由度
-    num_equation = length(element.nodes)
+    num_dof = length(element.nodes)
 
     # 初期化
-    Fe = zeros(Float64, num_equation, num_equation)
+    Fe = zeros(Float64, num_dof)
 
     # 積分点ループ
     for evaluate_point in element.evaluate_points
@@ -164,13 +175,11 @@ function compute_Fbe(element)
         N = shape_functions(evaluate_point.coordinate)
 
         # ヤコビ行列の計算
-        #J = jacobian_matrix(element.nodes, evaluate_point.coordinate)
+        J = jacobian_matrix(element.nodes, evaluate_point.coordinate)
 
-        # ガウス積分の重みとヤコビアンのスケーリング
-        #weight = gauss_weights[1] * gauss_weights[2] * det(J)
-
-        # ローカル右辺ベクトルの計算（内部発熱項も含む）
-        #local_F += N * element.heat_source * weight
+        # 要素ベクトルの計算
+        Fe += N' * value * evaluate_point.weight * det(J)
+    
     end
 
     return Fe
