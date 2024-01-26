@@ -2,7 +2,6 @@
 include("element.jl")
 include("boundary_condition.jl")
 using SparseArrays
-using KLU # A linear solver for sparse circuit simulation problems. This package wraps the SuiteSparse solver KLU.
 #----------------------------------------------------------------
 # モデル
 #----------------------------------------------------------------
@@ -106,9 +105,6 @@ function solve(model::Model, dirichlet_bcs::Vector{Dirichlet}, neumman_bcs::Vect
             rhs[idof] = value
         end
     end
-
-    # 疎行列を使って方程式を解く
-    #T = klu(lhs) \ rhs
     
     # デフォルトのスパースソルバーの場合
     T = lhs \ rhs
