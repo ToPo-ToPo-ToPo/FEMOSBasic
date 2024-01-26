@@ -96,12 +96,12 @@ function main()
 
     # 結果をノードに反映
     for node in thermal_diff_2d_model.nodes
-        node.field = T[node.id]
+        node.T = T[node.id]
     end
 
     # 結果のポスト
     println(T)
-    
+
 end
 #----------------------------------------------------------------
 # main関数の呼び出し

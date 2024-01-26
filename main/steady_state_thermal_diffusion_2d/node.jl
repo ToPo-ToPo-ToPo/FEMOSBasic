@@ -5,5 +5,5 @@
 mutable struct Node
     id::Int64                       # 節点番号
     coordinate::Vector{Float64}     # 節点座標
-    field::Float64                  # 状態場 (温度)
+    T::Float64                      # 温度場
 end
