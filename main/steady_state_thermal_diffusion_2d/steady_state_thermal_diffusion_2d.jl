@@ -100,7 +100,9 @@ function main()
     end
 
     # 結果のポスト
-    println(T)
+    for node in thermal_diff_2d_model.nodes
+        println("node ID: $(node.id), (x, y) = ($(node.coordinate[1]), $(node.coordinate[2])), temperature = $(node.T)")
+    end
 
 end
 #----------------------------------------------------------------
