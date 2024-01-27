@@ -1,34 +1,51 @@
 
 include("model.jl")
+include("create_voxel_mesh.jl")
 #----------------------------------------------------------------
 # メイン関数
 #----------------------------------------------------------------
 function main()
     # 材料モデルの定義
-    kappa::Float64 = 1.0
-    material::Material = Material(kappa)
+    kappa = 1.0
+    material = Material(kappa)
 
-    # 節点の定義
-    num_node::Int64 = 4
-    nodes::Vector{Node} = Vector{Node}(undef, num_node)
-    nodes[1] = Node(1, [0.0, 0.0, 0.0], 0.0)
-    nodes[2] = Node(2, [1.0, 0.0, 0.0], 0.0)
-    nodes[3] = Node(3, [1.0, 1.0, 0.0], 0.0)
-    nodes[4] = Node(4, [0.0, 1.0, 0.0], 0.0)
+    # 解析モデルの設定
+    length_x = 1.0
+    length_y = 1.0
+    division_x = 100
+    division_y = 100
 
-    # 要素の定義
-    num_elem::Int64 = 1
-
-    # コネクティビティの作成
-    connect = Matrix{Int64}(undef, num_elem, 4)
-    connect[1, :] = [1 2 3 4]
+    # 解析モデルの作成
+    num_node, num_element, nodes, connects = create_voxel_mesh(length_x, length_y, division_x, division_y)
 
     # 要素の定義
-    elements::Vector{Element} = Vector{Element}(undef, num_elem)
-    for e = 1 : num_elem
-        nodeset::Vector{Node} = [nodes[connect[e, 1]], nodes[connect[e, 2]], nodes[connect[e, 3]], nodes[connect[e, 4]]]
+    elements::Vector{Element} = Vector{Element}(undef, num_element)
+    for e = 1 : length(elements)
+        nodeset::Vector{Node} = [nodes[connects[e, 1]], nodes[connects[e, 2]], nodes[connects[e, 3]], nodes[connects[e, 4]]]
         elements[e] = Element(e, nodeset, material)
     end
+
+    # 節点の定義
+    #num_node::Int64 = 4
+    #nodes::Vector{Node} = Vector{Node}(undef, num_node)
+    #nodes[1] = Node(1, [0.0, 0.0, 0.0], 0.0)
+    #nodes[2] = Node(2, [1.0, 0.0, 0.0], 0.0)
+    #nodes[3] = Node(3, [1.0, 1.0, 0.0], 0.0)
+    #nodes[4] = Node(4, [0.0, 1.0, 0.0], 0.0)
+
+    # 要素の定義
+    #num_elem::Int64 = 1
+
+    # コネクティビティの作成
+    #connect = Matrix{Int64}(undef, num_elem, 4)
+    #connect[1, :] = [1 2 3 4]
+
+    # 要素の定義
+    #elements::Vector{Element} = Vector{Element}(undef, length(connects))
+    #for e = 1 : num_elem
+    #    nodeset::Vector{Node} = [nodes[connect[e, 1]], nodes[connect[e, 2]], nodes[connect[e, 3]], nodes[connect[e, 4]]]
+    #    elements[e] = Element(e, nodeset, material)
+    #end
 
     # ディレクレ境界条件を設定する節点ベクトルを作成
     range_min = [0.0, 0.0, 0.0]
