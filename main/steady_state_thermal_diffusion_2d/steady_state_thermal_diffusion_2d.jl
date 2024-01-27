@@ -13,8 +13,8 @@ function main()
     # 解析モデルの設定
     length_x = 1.0
     length_y = 1.0
-    division_x = 400
-    division_y = 400
+    division_x = 100
+    division_y = 100
 
     # 解析モデルの作成
     num_node, num_element, nodes, connects = create_voxel_mesh(length_x, length_y, division_x, division_y)
@@ -45,8 +45,8 @@ function main()
     push!(dirichlet_bcs, Dirichlet(1, 0.0, dirich_node))
 
     # ノイマン境界を設定する節点ベクトルを作成
-    range_min = [1.0, 0.0, 0.0]
-    range_max = [1.0, 1.0, 0.0]
+    range_min = [1.0, 0.4, 0.0]
+    range_max = [1.0, 0.6, 0.0]
     neum_node = Vector{Node}()
     for node in nodes
         if range_min[1] - 1.0e-05 < node.coordinate[1] < range_max[1] + 1.0e-05 && 
@@ -96,7 +96,7 @@ function main()
     end
 
     # vtkファイルに結果を書き出し
-    write_vtk_unstructured(nodes, elements, T, "output_unstructured")
+    write_vtk_unstructured(nodes, elements, T, "output/vtu_file/steady_state_thermal_diffusion")
 
 end
 #----------------------------------------------------------------
