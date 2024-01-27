@@ -12,8 +12,8 @@ function main()
     # 解析モデルの設定
     length_x = 1.0
     length_y = 1.0
-    division_x = 100
-    division_y = 100
+    division_x = 10
+    division_y = 30
 
     # 解析モデルの作成
     num_node, num_element, nodes, connects = create_voxel_mesh(length_x, length_y, division_x, division_y)
