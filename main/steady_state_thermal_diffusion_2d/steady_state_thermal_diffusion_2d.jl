@@ -6,6 +6,7 @@ include("output_vtu.jl")
 # メイン関数
 #----------------------------------------------------------------
 function main()
+
     # 材料モデルの定義
     kappa = 1.0
     material = Material(kappa)
@@ -13,8 +14,8 @@ function main()
     # 解析モデルの設定
     length_x = 1.0
     length_y = 1.0
-    division_x = 100
-    division_y = 100
+    division_x = 200
+    division_y = 200
 
     # 解析モデルの作成
     num_node, num_element, nodes, connects = create_voxel_mesh(length_x, length_y, division_x, division_y)
@@ -102,4 +103,4 @@ end
 #----------------------------------------------------------------
 # main関数の呼び出し
 #----------------------------------------------------------------
-main()
+@time main()
