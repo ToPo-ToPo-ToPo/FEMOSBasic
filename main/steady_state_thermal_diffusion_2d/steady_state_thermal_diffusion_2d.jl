@@ -1,6 +1,7 @@
 
 include("model.jl")
 include("create_voxel_mesh.jl")
+include("output_vtu.jl")
 #----------------------------------------------------------------
 # メイン関数
 #----------------------------------------------------------------
@@ -12,8 +13,8 @@ function main()
     # 解析モデルの設定
     length_x = 1.0
     length_y = 1.0
-    division_x = 10
-    division_y = 30
+    division_x = 400
+    division_y = 400
 
     # 解析モデルの作成
     num_node, num_element, nodes, connects = create_voxel_mesh(length_x, length_y, division_x, division_y)
@@ -94,10 +95,8 @@ function main()
         node.T = T[node.id]
     end
 
-    # 結果のポスト
-    for node in thermal_diff_2d_model.nodes
-        println("node ID: $(node.id), (x, y) = ($(node.coordinate[1]), $(node.coordinate[2])), temperature = $(node.T)")
-    end
+    # vtkファイルに結果を書き出し
+    write_vtk_unstructured(nodes, elements, T, "output_unstructured")
 
 end
 #----------------------------------------------------------------
