@@ -25,28 +25,6 @@ function main()
         elements[e] = Element(e, nodeset, material)
     end
 
-    # 節点の定義
-    #num_node::Int64 = 4
-    #nodes::Vector{Node} = Vector{Node}(undef, num_node)
-    #nodes[1] = Node(1, [0.0, 0.0, 0.0], 0.0)
-    #nodes[2] = Node(2, [1.0, 0.0, 0.0], 0.0)
-    #nodes[3] = Node(3, [1.0, 1.0, 0.0], 0.0)
-    #nodes[4] = Node(4, [0.0, 1.0, 0.0], 0.0)
-
-    # 要素の定義
-    #num_elem::Int64 = 1
-
-    # コネクティビティの作成
-    #connect = Matrix{Int64}(undef, num_elem, 4)
-    #connect[1, :] = [1 2 3 4]
-
-    # 要素の定義
-    #elements::Vector{Element} = Vector{Element}(undef, length(connects))
-    #for e = 1 : num_elem
-    #    nodeset::Vector{Node} = [nodes[connect[e, 1]], nodes[connect[e, 2]], nodes[connect[e, 3]], nodes[connect[e, 4]]]
-    #    elements[e] = Element(e, nodeset, material)
-    #end
-
     # ディレクレ境界条件を設定する節点ベクトルを作成
     range_min = [0.0, 0.0, 0.0]
     range_max = [0.0, 1.0, 0.0]
