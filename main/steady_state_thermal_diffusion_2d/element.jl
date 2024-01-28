@@ -75,7 +75,7 @@ end
 #----------------------------------------------------------------
 # ヤコビアン行列の計算
 #----------------------------------------------------------------
-function jacobian_matrix(nodes::Vector{Node}, coordinate::Vector{Float64})
+function make_jacobian(nodes::Vector{Node}, coordinate::Vector{Float64})
     
     # 要素節点数の取得
     num_node = length(nodes)
@@ -119,7 +119,7 @@ function make_B(nodes, coordinate)
     dNdxi = shape_function_derivatives(coordinate)
 
     # ヤコビ行列の計算
-    J = jacobian_matrix(nodes, coordinate)
+    J = make_jacobian(nodes, coordinate)
 
     # dNdxの計算: dNdxi = J * dNdx -> dNdx = J_invers * dNdxi
     dNdx = J \ dNdxi
@@ -145,7 +145,7 @@ function make_Ke(element)
     for evaluate_point in element.evaluate_points
 
         # ヤコビ行列の計算
-        J = jacobian_matrix(element.nodes, evaluate_point.coordinate)
+        J = make_jacobian(element.nodes, evaluate_point.coordinate)
 
         # Bマトリクスの計算
         B = make_B(element.nodes, evaluate_point.coordinate)
@@ -175,7 +175,7 @@ function make_Fbe(element, value)
         N = shape_functions(evaluate_point.coordinate)
 
         # ヤコビ行列の計算
-        J = jacobian_matrix(element.nodes, evaluate_point.coordinate)
+        J = make_jacobian(element.nodes, evaluate_point.coordinate)
 
         # 要素ベクトルの計算
         Fe += N' * value * evaluate_point.weight * det(J)
