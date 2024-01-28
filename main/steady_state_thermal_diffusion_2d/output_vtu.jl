@@ -5,7 +5,7 @@ using WriteVTK
 #----------------------------------------------------------------
 # Paraviewのvtkファイルに結果を書き出す関数
 #----------------------------------------------------------------
-function write_vtk_unstructured(nodes, elements, results, filename)
+function output_vtu(nodes, elements, results, filename)
     
     # 節点情報の設定
     num_point = length(nodes) 
@@ -30,7 +30,5 @@ function write_vtk_unstructured(nodes, elements, results, filename)
     vtk_grid(filename, points, cells) do vtk
         vtk["temperature", VTKPointData()] = results
     end
-    
-    
 
 end

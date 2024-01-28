@@ -97,7 +97,7 @@ function main()
     end
 
     # vtkファイルに結果を書き出し
-    write_vtk_unstructured(nodes, elements, T, "output/vtu_file/steady_state_thermal_diffusion")
+    output_vtu(nodes, elements, T, "output/vtu_file/steady_state_thermal_diffusion")
 
 end
 #----------------------------------------------------------------
