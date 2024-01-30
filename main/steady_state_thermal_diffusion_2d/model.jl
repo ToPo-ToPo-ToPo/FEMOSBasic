@@ -1,5 +1,6 @@
 
 include("element.jl")
+include("line.jl")
 include("boundary_condition.jl")
 using SparseArrays
 #----------------------------------------------------------------
@@ -8,6 +9,7 @@ using SparseArrays
 mutable struct Model
     nodes::Vector{Node}                       # 全節点の情報
     elements::Vector{Element}                 # 全要素の情報
+    lines::Vector{Line}                       # 線要素の情報
 end
 #----------------------------------------------------------------
 # 有限要素法で2次元熱伝導方程式を解く関数
@@ -32,8 +34,16 @@ function solve(model::Model, dirichlet_bcs::Vector{Dirichlet}, neumman_bcs::Vect
         value = neumman_bc.value
         
         # ベクトルに足し込む
-        for node in neumman_bc.nodes
-            Fq[node.id] += value
+        for line in neumman_bc.lines
+            # 節点に与える熱流束
+            heat_flux = 0.5 * value * line.cross_section * compute_length(line)
+            
+            # アセンブリング
+            for i = 1 : length(line.nodes)
+                # 全体系での自由度番号を取得
+                idof = line.nodes[i].id
+                Fq[idof] += heat_flux
+            end
         end
     end
 

@@ -1,33 +1,20 @@
 
 include("node.jl")
+include("evaluate_point.jl")
 using LinearAlgebra
-#----------------------------------------------------------------
-# 材料モデル
-#----------------------------------------------------------------
-mutable struct Material
-    conductivity::Float64           # 熱伝導率
-end
-#----------------------------------------------------------------
-# 積分点構造体
-#----------------------------------------------------------------
-mutable struct EvaluatePoint
-    id::Int64                       # 評価点の番号
-    coordinate::Vector{Float64}     # 積分点座標
-    weight::Float64                 # 積分点の重み
-    material::Material              # 材料モデル
-end
 #----------------------------------------------------------------
 # 要素の構造体
 #----------------------------------------------------------------
 mutable struct Element
     id::Int64                                # 要素番号
     nodes::Vector{Node}                      # 要素節点
+    thickness::Float64                       # 要素の厚み
     evaluate_points::Vector{EvaluatePoint}   # 積分点の情報
 
     #-------------------------------------------------------
     # 内部コンストラクタ
     #-------------------------------------------------------
-    function Element(id::Int64, nodes::Vector{Node}, material::Material)
+    function Element(id::Int64, nodes::Vector{Node}, thickness::Float64, material::Material)
         
         # 評価点の作成
         evaluate_points = [
@@ -37,7 +24,7 @@ mutable struct Element
             EvaluatePoint(4, [-1.0 / sqrt(3.0),  1.0 / sqrt(3.0)], 1.0, deepcopy(material))
         ]
 
-        return new(id, nodes, evaluate_points)
+        return new(id, nodes, thickness, evaluate_points)
     end
 end
 #----------------------------------------------------------------
@@ -151,7 +138,7 @@ function make_Ke(element)
         B = make_B(element.nodes, evaluate_point.coordinate)
 
         # ローカル剛性行列の計算
-        Ke += evaluate_point.material.conductivity * B' * B * evaluate_point.weight * det(J)
+        Ke += evaluate_point.material.conductivity * B' * B * evaluate_point.weight * det(J) * element.thickness
 
     end
 
@@ -178,7 +165,7 @@ function make_Fbe(element, value)
         J = make_jacobian(element.nodes, evaluate_point.coordinate)
 
         # 要素ベクトルの計算
-        Fe += N' * value * evaluate_point.weight * det(J)
+        Fe += N' * value * evaluate_point.weight * det(J) * element.thickness
     
     end
 

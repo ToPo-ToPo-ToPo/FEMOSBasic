@@ -1,11 +1,12 @@
 
 include("node.jl")
 include("element.jl")
+include("line.jl")
 #----------------------------------------------------------------
 # モデルの長さ、分割数からボクセルメッシュを作成
 # 2D version
 #----------------------------------------------------------------
-function create_voxel_mesh(length_x, length_y, division_x, division_y)
+function create_voxel_mesh(length_x, length_y, division_x, division_y, thickness, material)
 
     # 節点の生成
     # 初期化
@@ -33,19 +34,43 @@ function create_voxel_mesh(length_x, length_y, division_x, division_y)
         end
     end
 
-    # コネクティビティの作成
-    num_element = division_x * division_y
-    connects = Matrix{Int64}(undef, num_element, 4)
-    for j = 1 : division_y
-        for i = 1 : division_x
-            id = i + (j - 1) * division_x
-            node_id1 = i + (j - 1) * (division_x + 1)
-            node_id2 = node_id1 + 1
-            node_id3 = node_id1 + division_x + 1 + 1
-            node_id4 = node_id1 + division_x + 1
-            connects[id, :] = [node_id1 node_id2 node_id3 node_id4]
+     # 要素の定義
+     num_element = division_x * division_y
+     elements = Vector{Element}(undef, num_element)
+     for j = 1 : division_y
+         for i = 1 : division_x
+             id = i + (j - 1) * division_x
+             n1 = i + (j - 1) * (division_x + 1)
+             n2 = n1 + 1
+             n3 = n1 + division_x + 1 + 1
+             n4 = n1 + division_x + 1
+             elements[id] = Element(id, [nodes[n1], nodes[n2], nodes[n3], nodes[n4]], thickness, material)
+         end
+     end
+ 
+
+    # 線要素の定義
+    num_line = division_x * (division_y + 1) + division_y * (division_x + 1)
+    lines = Vector{Line}(undef, num_line)
+    # X軸方向の線要素作成
+    for j in 1 : division_y + 1
+        for i in 1 : division_x
+            id = (j - 1) * division_x + i
+            n1 = i + (j - 1) * (division_x + 1)
+            n2 = n1 + 1
+            lines[id] = Line(id, [nodes[n1], nodes[n2]], thickness)
         end
     end
 
-    return num_node, num_element, nodes, connects
+    # Y軸方向の線要素作成
+    for j in 1 : division_y
+        for i in 1 : division_x + 1
+            id = division_x * (division_y + 1) + (i - 1) * division_y + j
+            n1 = i + (j - 1) * (division_x + 1)
+            n2 = n1 + division_x + 1
+            lines[id] = Line(id, [nodes[n1], nodes[n2]], thickness)
+        end
+    end
+
+    return nodes, elements, lines
 end

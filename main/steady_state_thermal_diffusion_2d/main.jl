@@ -14,18 +14,12 @@ function main()
     # 解析モデルの設定
     length_x = 1.0
     length_y = 1.0
-    division_x = 200
-    division_y = 200
+    thickness = 1.0
+    division_x = 10
+    division_y = 10
 
     # 解析モデルの作成
-    num_node, num_element, nodes, connects = create_voxel_mesh(length_x, length_y, division_x, division_y)
-
-    # 要素の定義
-    elements::Vector{Element} = Vector{Element}(undef, num_element)
-    for e = 1 : length(elements)
-        nodeset::Vector{Node} = [nodes[connects[e, 1]], nodes[connects[e, 2]], nodes[connects[e, 3]], nodes[connects[e, 4]]]
-        elements[e] = Element(e, nodeset, material)
-    end
+    nodes, elements, lines = create_voxel_mesh(length_x, length_y, division_x, division_y, thickness, material)
 
     # ディレクレ境界条件を設定する節点ベクトルを作成
     range_min = [0.0, 0.0, 0.0]
@@ -48,20 +42,23 @@ function main()
     # ノイマン境界を設定する節点ベクトルを作成
     range_min = [1.0, 0.4, 0.0]
     range_max = [1.0, 0.6, 0.0]
-    neum_node = Vector{Node}()
-    for node in nodes
-        if range_min[1] - 1.0e-05 < node.coordinate[1] < range_max[1] + 1.0e-05 && 
-           range_min[2] - 1.0e-05 < node.coordinate[2] < range_max[2] + 1.0e-05 &&
-           range_min[3] - 1.0e-05 < node.coordinate[3] < range_max[3] + 1.0e-05
+    neum_lines = Vector{Line}()
+    
+    for line in lines
+        # 要素中心を取得
+        center_coord = compute_element_center(line)
+        if range_min[1] - 1.0e-05 < center_coord[1] < range_max[1] + 1.0e-05 && 
+           range_min[2] - 1.0e-05 < center_coord[2] < range_max[2] + 1.0e-05 &&
+           range_min[3] - 1.0e-05 < center_coord[3] < range_max[3] + 1.0e-05
             
             # 該当する節点を追加
-            push!(neum_node, node)
+            push!(neum_lines, line)
         end
     end
 
     # ノイマン境界の作成
     neumman_bcs = Vector{Neumman}()
-    push!(neumman_bcs, Neumman(1, 1.0, neum_node))
+    push!(neumman_bcs, Neumman(1, 1.0, neum_lines))
 
     # ソース項を与える要素ベクトルを作成
     range_min = [0.0, 0.0, 0.0]
@@ -86,7 +83,7 @@ function main()
     push!(sources, Source(1, 0.0, source_element))
 
     # モデルの作成
-    thermal_diff_2d_model::Model = Model(nodes, elements)
+    thermal_diff_2d_model::Model = Model(nodes, elements, lines)
 
     # FEM解析の実行
     T = solve(thermal_diff_2d_model, dirichlet_bcs, neumman_bcs, sources)
