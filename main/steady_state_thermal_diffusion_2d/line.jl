@@ -8,20 +8,6 @@ mutable struct Line
     id::Int64                                # 要素番号
     nodes::Vector{Node}                      # 要素節点
     cross_section::Float64                   # 要素の太さ
-    evaluate_points::Vector{EvaluatePoint}   # 積分点の情報
-    #-------------------------------------------------------
-    # 内部コンストラクタ
-    #-------------------------------------------------------
-    function Line(id::Int64, nodes::Vector{Node}, cross_section::Float64)
-        
-        # 評価点の作成
-        evaluate_points = [
-            EvaluatePoint(1, [-1.0 / sqrt(3.0)], 1.0),
-            EvaluatePoint(2, [ 1.0 / sqrt(3.0)], 1.0)
-        ]
-
-        return new(id, nodes, cross_section, evaluate_points)
-    end
 end
 #----------------------------------------------------------------
 # 要素長さを計算
